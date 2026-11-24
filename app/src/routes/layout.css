@@ -1,0 +1,115 @@
+@import 'tailwindcss';
+
+@import "tailwindcss";
+
+/* =========================
+   THEME (design tokens)
+   ========================= */
+@theme {
+  /* Fonts */
+  --font-sans: "DM Sans", sans-serif;
+  --font-mono: "DM Mono", monospace;
+
+  /* Accent colors */
+  --color-accent: #1a3a5c;
+  --color-accent-light: #2563a8;
+  --color-accent-muted: #e8eef5;
+
+  /* Stone palette (overriding default) */
+  --color-stone-50:  #fafaf9;
+  --color-stone-100: #f5f5f4;
+  --color-stone-200: #e7e5e4;
+  --color-stone-300: #d6d3d1;
+  --color-stone-400: #a8a29e;
+  --color-stone-500: #78716c;
+  --color-stone-600: #57534e;
+  --color-stone-700: #44403c;
+  --color-stone-800: #292524;
+  --color-stone-900: #1c1917;
+  --color-stone-950: #0c0a09;
+}
+
+/* =========================
+   ANIMATIONS
+   ========================= */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================
+   UTILITIES
+   ========================= */
+@layer utilities {
+  .animate-fade-in {
+    animation: fade-in 0.4s ease forwards;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.4s ease forwards;
+  }
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-accent text-white text-sm font-medium
+           rounded hover:bg-accent-light transition-colors duration-150 disabled:opacity-40
+           disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-4 py-2 border border-stone-300 text-stone-700
+           text-sm font-medium rounded hover:bg-stone-100 transition-colors duration-150
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 text-stone-500 text-sm
+           hover:text-stone-800 hover:bg-stone-100 rounded transition-colors duration-150;
+  }
+
+  .card {
+    @apply bg-white border border-stone-200 rounded-lg p-5 transition-shadow duration-200
+           hover:shadow-md;
+  }
+
+  .section-label {
+    @apply text-xs font-mono font-medium tracking-widest uppercase text-stone-400 mb-1;
+  }
+
+  .tag {
+    @apply inline-block px-2 py-0.5 text-xs bg-accent-muted text-accent rounded
+           font-mono;
+  }
+
+  .input {
+    @apply w-full px-3 py-2 border border-stone-300 rounded text-sm text-stone-800
+           placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-accent/30
+           focus:border-accent transition-colors duration-150 bg-white;
+  }
+}
