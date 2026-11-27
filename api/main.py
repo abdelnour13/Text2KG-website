@@ -17,7 +17,6 @@ from fastapi.responses import FileResponse
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-
 from src.graphs import router
 from src.config import get_settings
 from src.db.neo4j import init_driver, close_driver
@@ -34,9 +33,7 @@ PUBLIC_DIR.mkdir(parents=True, exist_ok=True)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("LIFESPAN START", flush=True)
-
     settings = get_settings()
-
     print("GOT SETTINGS", flush=True)
 
     await init_driver(settings)
@@ -81,23 +78,6 @@ app.add_middleware(
 # ── Static files ──────────────────────────────────────────────────────────────
 
 app.mount("/public", StaticFiles(directory=str(PUBLIC_DIR)), name="public")
-app.mount("/app", StaticFiles(directory=str(APP_DIR)), name="app")
-
-
-# @app.get('/app')
-# def data():   
-#     return FileResponse("app/index.html")
-
-# @app.get('/data.json')
-# def data():
-        
-#     with open(APP_DIR / "data.json", "r") as f:
-
-#         return JSONResponse(
-#             status_code=HTTPStatus.OK,
-#             content=json.load(f)
-#         )
-
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 

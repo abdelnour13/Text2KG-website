@@ -38,6 +38,7 @@ def fetch_all_graphs(session: Session) -> list[dict]:
     return [
         {
             "id" : row['m']['graph_id'],
+            "name" : row['m']['name'],
             "description" : row['m']['description'],
             "number_of_expertises": row["numExpertises"],
             "labs": row["labs"],
@@ -105,6 +106,7 @@ def fetch_graph_by_id(session: Session, graph_id: str) -> dict | None:
     
     result = {
         "id" : graph_details['m']['graph_id'],
+        "name" : graph_details['m']['name'],
         "description" : graph_details['m']['description'],
         "labs": graph_details["labs"],
         "domains" : graph_details['domains'],

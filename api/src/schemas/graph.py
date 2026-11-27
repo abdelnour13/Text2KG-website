@@ -9,6 +9,7 @@ class GraphSummary(BaseModel):
     """Lightweight representation returned by GET /graphs."""
 
     id: str
+    name : str
     description: str
     number_of_expertises: int
     labs: list[str]
@@ -31,7 +32,7 @@ class SubDomainSchema(BaseModel):
 
 class ExpertiseSchema(BaseModel):
     id: str
-    personalized_pagerank_name: str
+    personalized_pagerank_name: str | None
     llm_label: str
     size: int
     domains : list[str] = Field(default_factory=list)
@@ -53,6 +54,7 @@ class GraphDetail(BaseModel):
     """Full representation returned by GET /graphs/{id}."""
 
     id: str
+    name : str
     description: str
     domains: list[str]
     labs : list[str]

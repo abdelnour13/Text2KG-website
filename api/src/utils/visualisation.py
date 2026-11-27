@@ -652,4 +652,5 @@ def build_summary_vis(data: dict) -> str:
  
     filename = _new_filename()
     (VIS_DIR / filename).write_text(html, encoding="utf-8")
+    print(VIS_DIR)
     return filename

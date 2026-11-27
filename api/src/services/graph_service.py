@@ -46,6 +46,7 @@ class GraphService:
         return [
             GraphSummary(
                 id=row["id"],
+                name=row['name'],
                 description=row.get("description", "No description available."),
                 number_of_expertises=row.get("number_of_expertises", 0),
                 domains=row.get("domains", []),

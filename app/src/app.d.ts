@@ -14,6 +14,7 @@ declare global {
 
 		interface GraphSummary {
 			id: string
+			name: string
 			description: string
 			number_of_expertises: number
 			labs: string[]

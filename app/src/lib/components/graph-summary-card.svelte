@@ -1,89 +1,49 @@
-<script lang="ts" >
+<script lang="ts">
 
-    import downloadIcon from '$lib/assets/download.svg';
-	import type { MouseEventHandler } from 'svelte/elements';
-    import TagList from './ui/taglist.svelte';
-    import { downloadGraph } from '$lib/services/api';
-    import { goto } from '$app/navigation';
+    import { i18n } from '$lib/i18n/index.svelte';
 
-    let summary : App.GraphSummary = $props();
+    let summary: App.GraphSummary = $props();
 
-    let downloading = $state(false);
-    let downloadError : string | null = $state(null);
 
-    let displayName = $derived(summary.id.split('_').join(' '));
+    let displayName = $derived(summary.name);
+    let href = $derived(`/maps/${encodeURIComponent(summary.id)}`);
 
-    const handleDownload : MouseEventHandler<HTMLButtonElement> = async (e) => {
+    let figures = $derived([
+        { value: summary.number_of_expertises ?? 0, label: i18n.t.maps.card.expertises },
+        { value: summary.domains?.length ?? 0,      label: i18n.t.maps.card.domains },
+        { value: summary.labs?.length ?? 0,         label: i18n.t.maps.card.labs },
+    ]);
 
-        e.stopPropagation();
-        downloadError = null;
-        downloading = true;
-
-        try {
-            await downloadGraph(summary.id)
-        } catch (err) {
-            downloadError = err instanceof Error ? err.message : 'Download failed'
-        } finally {
-            downloading = false;
-        }
-    };
 
 </script>
 
-<div
-    class="card cursor-pointer group animate-fade-in"
-    role="button"
-    tabindex={0}   
-    onclick={() => goto(`maps/${summary.id}`)}
-    onkeydown={(ev) => { ev.key == 'Enter' && goto(`maps/${summary.id}`)}}
->
-    <div class="flex items-start justify-between gap-2 mb-3">
-        <div>
-            <p class="section-label">Expertise map</p>
-            <h3 class="text-sm font-semibold text-stone-800 capitalize leading-snug group-hover:text-accent transition-colors">
-            {displayName}
-            </h3>
-        </div>
-        <span class="shrink-0 text-xs font-mono bg-stone-100 text-stone-500 px-2 py-0.5 rounded">
-            {summary.number_of_expertises} expertises
-        </span>
-    </div>
+<!-- The whole card is clickable through the title link's stretched hit area. -->
+<article class="group relative flex flex-col rounded-3xl bg-white p-7 ring-1 ring-line transition-shadow duration-200 focus-within:ring-2 focus-within:ring-accent-light hover:shadow-[0_8px_30px_-12px_rgb(21_32_51/0.18)] hover:ring-ink-faint/40">
 
-    <p class="text-xs text-stone-500 leading-relaxed mb-4 line-clamp-2">
-        {summary.description || 'No description available.'}
+    <h2 class="text-xl leading-snug font-semibold text-ink capitalize">
+        <a {href} class="outline-none after:absolute after:inset-0 after:rounded-3xl after:content-['']">
+            {displayName}
+        </a>
+    </h2>
+
+    <p class="mt-2 line-clamp-3 text-base leading-relaxed text-ink-soft">
+        {summary.description || i18n.t.maps.card.noDescription}
     </p>
 
-    <!-- {#if summary.labs.length > 0}
-        <div class="mb-3">
-          <p class="section-label">Labs</p>
-          <TagList items={summary.labs} maxVisible={3} />
-        </div>
-    {/if}
+    <dl class="mt-6 mb-6 flex flex-wrap gap-x-6 gap-y-2">
+        {#each figures as f}
+            <div class="flex items-baseline gap-1.5">
+                <dt class="order-2 text-sm text-ink-faint">{f.label(f.value)}</dt>
+                <dd class="order-1 text-lg font-semibold tabular-nums text-ink">{i18n.num(f.value)}</dd>
+            </div>
+        {/each}
+    </dl>
 
-    {#if summary.subdomains.length > 0}
-        <div class="mb-4">
-          <p class="section-label">Domains</p>
-          <TagList items={summary.domains} maxVisible={4} />
-        </div>
-    {/if} -->
-
-    <div class="flex items-center justify-between pt-3 border-t border-stone-100">
-        <span class="text-xs text-accent font-medium group-hover:underline">
-          View details →
+    <div class="mt-auto flex items-center justify-between gap-4 border-t border-line pt-5">
+        <span class="text-base font-medium text-accent-light group-hover:underline group-hover:underline-offset-4">
+            {i18n.t.maps.card.open}
         </span>
-        <button
-          onclick={handleDownload}
-          disabled={downloading}
-          class="btn-ghost text-xs"
-          title="Download graph JSON dump"
-        >
-          <img src={downloadIcon} alt="" />
-          {downloading ? 'Downloading…' : 'Download'}
-        </button>
+        <svg viewBox="0 0 24 24" class="size-5 text-accent-light transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
     </div>
 
-    {#if downloadError}
-        <p class="mt-2 text-xs text-red-600">{downloadError}</p>
-    {/if}
-
-</div>
+</article>

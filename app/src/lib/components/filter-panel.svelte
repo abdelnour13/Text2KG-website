@@ -1,198 +1,139 @@
-<script lang="ts" >
+<script lang="ts">
+
+    import { i18n } from '$lib/i18n/index.svelte';
 
     type FilterMode = 'domain' | 'subdomain';
 
     interface FilterPanelProps {
-        domains : string[]
-        subdomains : string[]
-        labs : string[]
-        onInputChange : (mode: FilterMode, labs : Set<string>, domains : Set<string>, subdomains : Set<string>) => void
-    };
+        domains: string[];
+        subdomains: string[];
+        labs: string[];
+        onInputChange: (mode: FilterMode, labs: Set<string>, domains: Set<string>, subdomains: Set<string>) => void;
+    }
 
-    const MODES : FilterMode[] = ['domain', 'subdomain'];
+    // Long chip lists are collapsed after this many items.
+    const COLLAPSED_COUNT = 12;
 
-    let { domains, labs, subdomains, onInputChange } : FilterPanelProps = $props();
+    let { domains, labs, subdomains, onInputChange }: FilterPanelProps = $props();
 
-    let filterMode = $state('domain' as FilterMode);
+    let filterMode = $state<FilterMode>('domain');
     let selectedDomains = $state(new Set<string>());
     let selectedSubdomains = $state(new Set<string>());
     let selectedLabs = $state(new Set<string>());
+    let showAllTopics = $state(false);
+    let showAllLabs = $state(false);
 
-    let hasFilters = $derived(
-        (filterMode === 'domain' && selectedDomains.size > 0)       ||
-        (filterMode === 'subdomain' && selectedSubdomains.size > 0) ||
-        (selectedLabs.size > 0)
-    );
+    let topics = $derived(filterMode === 'domain' ? domains : subdomains);
+    let selectedTopics = $derived(filterMode === 'domain' ? selectedDomains : selectedSubdomains);
+    let visibleTopics = $derived(showAllTopics ? topics : topics.slice(0, COLLAPSED_COUNT));
+    let visibleLabs = $derived(showAllLabs ? labs : labs.slice(0, COLLAPSED_COUNT));
 
-    const toggleDomainsSet = (item : string) => {
+    let selectionCount = $derived(selectedTopics.size + selectedLabs.size);
 
-        if (selectedDomains.has(item)) {
-            selectedDomains.delete(item);
-        }
+    const emit = () => onInputChange(filterMode, selectedLabs, selectedDomains, selectedSubdomains);
 
-        else
-        {
-            selectedDomains.add(item);
-        }
-
-        selectedDomains = new Set(selectedDomains);
-        onInputChange(filterMode, selectedLabs, selectedDomains, selectedSubdomains);
-
+    function toggle(set: Set<string>, item: string): Set<string> {
+        const next = new Set(set);
+        if (next.has(item)) next.delete(item);
+        else next.add(item);
+        return next;
     }
 
-    const toggleSubdomainsSet = (item : string) => {
-
-        if (selectedSubdomains.has(item)) {
-            selectedSubdomains.delete(item);
-        }
-
-        else 
-        {
-            selectedSubdomains.add(item);
-        }
-
-        selectedSubdomains = new Set(selectedSubdomains);
-        onInputChange(filterMode, selectedLabs, selectedDomains, selectedSubdomains);
-
+    function toggleTopic(item: string) {
+        if (filterMode === 'domain') selectedDomains = toggle(selectedDomains, item);
+        else selectedSubdomains = toggle(selectedSubdomains, item);
+        emit();
     }
 
-    const toggleLabsSet = (item : string) => {
-
-        if (selectedLabs.has(item)) {
-            selectedLabs.delete(item);
-        }
-
-        else 
-        {
-            selectedLabs.add(item);
-        }
-
-        selectedLabs = new Set(selectedLabs);
-        onInputChange(filterMode, selectedLabs, selectedDomains, selectedSubdomains);
-
+    function toggleLab(item: string) {
+        selectedLabs = toggle(selectedLabs, item);
+        emit();
     }
 
-    // $effect(() => {
-    //     onInputChange(filterMode, selectedLabs, selectedDomains, selectedLabs);
-    // })
+    function setMode(mode: FilterMode) {
+        if (mode === filterMode) return;
+        filterMode = mode;
+        selectedDomains = new Set();
+        selectedSubdomains = new Set();
+        showAllTopics = false;
+        emit();
+    }
+
+    function clearAll() {
+        selectedDomains = new Set();
+        selectedSubdomains = new Set();
+        selectedLabs = new Set();
+        emit();
+    }
+
+    const chipClass = (on: boolean) => [
+        'inline-flex min-h-9 items-center rounded-full px-3.5 py-1.5 text-left text-sm leading-snug transition-colors',
+        on
+            ? 'bg-accent text-white'
+            : 'bg-paper text-ink-soft ring-1 ring-line hover:bg-accent-muted hover:text-accent hover:ring-accent-light/30',
+    ];
 
 </script>
 
-<div class="border border-stone-200 rounded-lg p-4 space-y-4 bg-stone-50 mb-4">
+<div class="rounded-2xl bg-white p-5 ring-1 ring-line sm:p-6">
 
-    <div class="space-y-2">
-        <div class="flex items-center gap-4">
-            <span class="text-xs font-medium text-stone-600 w-24 shrink-0">Filter by</span>
-            <div class="flex items-center gap-1 bg-white border border-stone-200 rounded p-0.5">
-                {#each MODES as mode}
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <span class="text-sm font-medium text-ink" id="filter-mode-label">{i18n.t.filters.filterBy}</span>
+            <div class="inline-flex rounded-full bg-paper p-1 ring-1 ring-line" role="group" aria-labelledby="filter-mode-label">
+                {#each [['domain', i18n.t.filters.domain], ['subdomain', i18n.t.filters.subdomain]] as [mode, label]}
                     <button
-                        onclick={() => {
-                            console.log('clicked');
-                            filterMode = mode;
-                            selectedDomains = new Set();
-                            selectedSubdomains = new Set();
-                        }}
+                        type="button"
+                        onclick={() => setMode(mode as FilterMode)}
+                        aria-pressed={filterMode === mode}
                         class={[
-                        'px-3 py-1 text-xs rounded transition-colors capitalize',
-                        filterMode === mode
-                            ? 'bg-accent text-white font-medium'
-                            : 'text-stone-500 hover:text-stone-800',
-                        ].join(' ')}
+                            'h-8 rounded-full px-4 text-sm font-medium transition-colors',
+                            filterMode === mode ? 'bg-white text-ink shadow-sm ring-1 ring-line' : 'text-ink-soft hover:text-ink',
+                        ]}
                     >
-                        {mode}
+                        {label}
                     </button>
                 {/each}
             </div>
         </div>
 
-        {#if filterMode === 'domain' && domains.length > 0}
-            <div class="flex items-start gap-4">
-                <span class="text-xs text-stone-400 w-24 shrink-0 pt-1">Domains</span>
-                <div class="flex flex-wrap gap-1.5">
-                {#each domains as domain}
-                    <button
-                        onclick={() => toggleDomainsSet(domain)}
-                        class={[
-                            'px-2.5 py-1 text-xs rounded border transition-colors',
-                            selectedDomains.has(domain)
-                            ? 'bg-accent text-white border-accent'
-                            : 'bg-white text-stone-600 border-stone-200 hover:border-accent hover:text-accent',
-                        ].join(' ')}
-                    >
-                    {domain}
-                    </button>
-                {/each}
-                </div>
-            </div>
+        {#if selectionCount > 0}
+            <button type="button" onclick={clearAll} class="text-sm font-medium text-accent-light hover:underline hover:underline-offset-4">
+                {i18n.t.filters.clear(selectionCount)}
+            </button>
         {/if}
-
-        {#if filterMode == 'subdomain' && subdomains.length > 0}
-            <div class="flex items-start gap-4">
-                <span class="text-xs text-stone-400 w-24 shrink-0 pt-1">Subdomains</span>
-                <div class="flex flex-wrap gap-1.5">
-                {#each subdomains as subdomain}
-                    <button
-                        onclick={() => toggleSubdomainsSet(subdomain)}
-                        class={[
-                            'px-2.5 py-1 text-xs rounded border transition-colors',
-                            selectedSubdomains.has(subdomain)
-                            ? 'bg-accent text-white border-accent'
-                            : 'bg-white text-stone-600 border-stone-200 hover:border-accent hover:text-accent',
-                        ].join(' ')}
-                    >
-                    {subdomain}
-                    </button>
-                {/each}
-                </div>
-            </div>
-        {/if}
-
     </div>
 
-    {#if labs.length}
-
-        <div class="flex items-start gap-4 pt-2 border-t border-stone-200">
-            <span class="text-xs font-medium text-stone-600 w-24 shrink-0 pt-1">Labs</span>
-            <div class="flex flex-wrap gap-1.5">
-                {#each labs as lab}
-                    <button
-                        onclick={() => toggleLabsSet(lab)}
-                        class={[
-                            'px-2.5 py-1 text-xs rounded border transition-colors',
-                            selectedLabs.has(lab)
-                            ? 'bg-accent text-white border-accent'
-                            : 'bg-white text-stone-600 border-stone-200 hover:border-accent hover:text-accent',
-                        ].join(' ')}
-                    >
-                    {lab}
-                    </button>
-                {/each}
-            </div>
+    {#if topics.length > 0}
+        <div class="mt-4 flex flex-wrap gap-2">
+            {#each visibleTopics as item}
+                <button type="button" onclick={() => toggleTopic(item)} aria-pressed={selectedTopics.has(item)} class={chipClass(selectedTopics.has(item))}>
+                    {item}
+                </button>
+            {/each}
+            {#if topics.length > COLLAPSED_COUNT}
+                <button type="button" onclick={() => (showAllTopics = !showAllTopics)} class="min-h-9 px-2 text-sm font-medium text-accent-light hover:underline hover:underline-offset-4">
+                    {showAllTopics ? i18n.t.filters.showFewer : i18n.t.filters.showAll(topics.length)}
+                </button>
+            {/if}
         </div>
-
     {/if}
 
-
-    {#if hasFilters}
-        <div class="flex items-center justify-between pt-1">
-            <span class="text-xs text-stone-400">
-                {[
-                    filterMode === 'domain'    && selectedDomains.size > 0    && `${selectedDomains.size} domain${selectedDomains.size > 1 ? 's' : ''}`,
-                    filterMode === 'subdomain' && selectedSubdomains.size > 0 && `${selectedSubdomains.size} subdomain${selectedSubdomains.size > 1 ? 's' : ''}`,
-                    selectedLabs.size > 0 && `${selectedLabs.size} lab${selectedLabs.size > 1 ? 's' : ''}`,
-                ].filter(Boolean).join(', ')} selected
-            </span>
-            <button
-                onclick={() => { 
-                    selectedDomains = new Set<string>();
-                    selectedSubdomains = new Set<string>();
-                    selectedLabs = new Set<string>();
-                }}
-                class="text-xs text-stone-400 hover:text-stone-700 transition-colors"
-            >
-                Clear filters
-            </button>
+    {#if labs.length > 0}
+        <div class="mt-5 border-t border-line pt-5">
+            <p class="text-sm font-medium text-ink">{i18n.t.filters.labs}</p>
+            <div class="mt-3 flex flex-wrap gap-2">
+                {#each visibleLabs as lab}
+                    <button type="button" onclick={() => toggleLab(lab)} aria-pressed={selectedLabs.has(lab)} class={chipClass(selectedLabs.has(lab))}>
+                        {lab}
+                    </button>
+                {/each}
+                {#if labs.length > COLLAPSED_COUNT}
+                    <button type="button" onclick={() => (showAllLabs = !showAllLabs)} class="min-h-9 px-2 text-sm font-medium text-accent-light hover:underline hover:underline-offset-4">
+                        {showAllLabs ? i18n.t.filters.showFewer : i18n.t.filters.showAll(labs.length)}
+                    </button>
+                {/if}
+            </div>
         </div>
-    {/if} 
-
+    {/if}
 </div>

@@ -1,13 +1,13 @@
 FROM python:3.11-slim
 
-WORKDIR /app
+WORKDIR /api
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN mkdir -p /app/public/visualizations
+RUN mkdir -p /api/public/visualizations
 
 EXPOSE 8000
 

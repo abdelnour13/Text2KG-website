@@ -126,7 +126,6 @@ def vis_expertises(
     labs : Optional[list[str]] = Query(default=None),
 ) -> VisualisationResponse:
     """Build and persist an interactive HTML graph of all expertises."""
-    print(domains, subdomains, labs)
     data = _service.get_expertises_data(session, graph_id, subdomains, domains, labs)
     filename = build_expertises_vis(data)
     return VisualisationResponse(url=_vis_url(settings, filename), filename=filename)

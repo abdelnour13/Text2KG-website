@@ -29,25 +29,6 @@ export async function getGraph(id: string): Promise<App.GraphDetail> {
   return request<App.GraphDetail>(`/graphs/${encodeURIComponent(id)}`)
 }
 
-/**
- * GET /graphs/{id}/download — stream the subgraph JSON as a file download.
- * Triggers a browser download directly; returns void.
- */
-export async function downloadGraph(id: string): Promise<void> {
-  const res = await fetch(`${BASE}/graphs/${encodeURIComponent(id)}/download`)
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ detail: res.statusText }))
-    throw new Error(body.detail ?? `HTTP ${res.status}`)
-  }
-  const blob = await res.blob()
-  const url  = URL.createObjectURL(blob)
-  const a    = document.createElement('a')
-  a.href     = url
-  a.download = `graph_${id}.json`
-  a.click()
-  URL.revokeObjectURL(url)
-}
-
 // ── Visualisation endpoints ───────────────────────────────────────────────────
 
 /** POST /graphs/{id}/vis/taxonomy */
@@ -73,13 +54,13 @@ export async function visExpertises(
   )
 }
 
-/** POST /graphs/{id}/vis/expertises/{community_id} */
+/** POST /graphs/{id}/vis/expertises/{expertise_id} */
 export async function visExpertiseDetail(
   id: string,
-  communityId: string
+  expertiseId: string
 ): Promise<App.VisualisationResponse> {
   return request<App.VisualisationResponse>(
-    `/graphs/${encodeURIComponent(id)}/vis/expertises/${encodeURIComponent(communityId)}`,
+    `/graphs/${encodeURIComponent(id)}/vis/expertises/${encodeURIComponent(expertiseId)}`,
     { method: 'POST' }
   )
 }
@@ -91,6 +72,3 @@ export async function visSummary(id: string): Promise<App.VisualisationResponse>
   })
 }
 
-export function downloadURL(filename : string) : string {
-  return `${BASE}/download/${filename}`
-}
